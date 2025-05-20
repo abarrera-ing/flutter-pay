@@ -62,6 +62,33 @@ const String defaultApplePay = '''{
         "label": "FedEx Priority Mail"
       }
     ]
+}''';
+
+/// Sample [PaymentConfiguration] for Apple Pay
+final recurringApplePayConfig =
+    PaymentConfiguration.fromJsonString(recurringApplePay);
+
+const String recurringApplePay = '''{
+  "provider": "apple_pay",
+  "data": {
+    "merchantIdentifier": "merchant.com.sams.fish",
+    "displayName": "Sam's Fish",
+    "merchantCapabilities": ["3DS", "debit", "credit"],
+    "supportedNetworks": ["amex", "visa", "discover", "masterCard"],
+    "countryCode": "US",
+    "currencyCode": "USD",
+    "requiredBillingContactFields": ["emailAddress", "name", "phoneNumber", "postalAddress"],
+    "requiredShippingContactFields": [],
+    "automaticReloadPaymentRequest": {
+          "paymentDescription": "T-Shirt payment description",
+          "automaticReloadBilling": {
+              "label": "T-Shirt Shop is going to save your payment method",
+              "amount": "0.00",
+              "automaticReloadPaymentThresholdAmount": "0.00"
+          },
+          "billingAgreement": "T-shirt Shop billing agremeent",
+          "managementURL": "<Insert management url here>"
+        }
   }
 }''';
 

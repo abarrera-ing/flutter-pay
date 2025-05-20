@@ -166,8 +166,50 @@ class PaymentHandler: NSObject {
     if let supportedNetworks = supportedNetworks(from: paymentConfigurationString) {
       paymentRequest.supportedNetworks = supportedNetworks
     }
+
+    // Add automatic reload payment info if available.
+    if #available(iOS 16.0, *) {
+      if let automaticReloadData = paymentConfiguration["automaticReloadPaymentRequest"] as? [String: Any], 
+        let automaticReloadRequest = automaticReloadRequest(from: automaticReloadData) {
+          paymentRequest.automaticReloadPaymentRequest = automaticReloadRequest
+      }
+    }
     
     return paymentRequest
+  }
+
+  @available(iOS 16.0, *)
+  private static func automaticReloadRequest(from config: [String: Any]) -> PKAutomaticReloadPaymentRequest? {
+    guard let paymentDescription = config["paymentDescription"] as? String,
+          let autoReloadBillingData = config["automaticReloadBilling"] as? [String: Any],
+          let billingLabel = autoReloadBillingData["label"] as? String,
+          let billingAmountString = autoReloadBillingData["amount"] as? String,
+          let thresholdAmountString = autoReloadBillingData["automaticReloadPaymentThresholdAmount"] as? String,
+          let billingAgreement = config["billingAgreement"] as? String,
+          let managementURLString = config["managementURL"] as? String,
+          let managementURL = URL(string: managementURLString) else {
+            print("Error: Missing fields for PKAutomaticReloadPaymentRequest. Check paymentDescription, automaticReloadBilling (with label, amount, automaticReloadPaymentThresholdAmount), billingAgreement and managementURL.")
+        return nil
+    }
+
+    let billingAmount = NSDecimalNumber(string: billingAmountString)
+    let thresholdAmount = NSDecimalNumber(string: thresholdAmountString)
+
+    // Create the PKAutomaticReloadPaymentSummaryItem directly
+    let automaticReloadBillingItem = PKAutomaticReloadPaymentSummaryItem(label: billingLabel, amount: billingAmount)
+    automaticReloadBillingItem.thresholdAmount = thresholdAmount
+    
+    // Create the PKAutomaticReloadPaymentRequest
+    let automaticReloadRequest = PKAutomaticReloadPaymentRequest(paymentDescription: paymentDescription, automaticReloadBilling: automaticReloadBillingItem, managementURL: managementURL)
+    
+    automaticReloadRequest.billingAgreement = billingAgreement
+    
+    if let tokenNotificationURLString = config["tokenNotificationURL"] as? String,
+        let tokenNotificationURL = URL(string: tokenNotificationURLString) {
+        automaticReloadRequest.tokenNotificationURL = tokenNotificationURL
+    }
+    
+    return automaticReloadRequest
   }
 }
 
